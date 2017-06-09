@@ -63,7 +63,7 @@ public class CookCCMojo extends AbstractMojo
 	@Parameter (defaultValue = "${project}", readonly = true, required = true)
 	private MavenProject m_project;
 
-	private CompilerConfiguration createBaseCompilerConfig (String cookccPath)
+	private CompilerConfiguration createBaseCompilerConfig (String cookccPath) throws MojoExecutionException
 	{
 		CompilerConfiguration config = new CompilerConfiguration ();
 		
@@ -89,8 +89,12 @@ public class CookCCMojo extends AbstractMojo
 		// add the class output directory to the class path as well.
 		config.addClasspathEntry (classDir);
 		// also add source directories
-		for (String src : compileSourceRoots)
-			config.addSourceLocation (src);
+		String src = getJavaSrcDir ();
+		if (src == null)
+		{
+			throw new MojoExecutionException ("Unable to locate Java source directory.");
+		}
+		config.addSourceLocation (src);
 		// set the CookCC output directory to be the java source directory.
 		config.addCompilerCustomArgument ("-Ad=" + compileSourceRoots.get (0), null);
 
@@ -98,6 +102,18 @@ public class CookCCMojo extends AbstractMojo
 		config.setFork (true);
 		config.setVerbose (verbose);
 		return config;
+	}
+
+	public String getJavaSrcDir ()
+	{
+		for (String src : compileSourceRoots)
+		{
+			if (src.endsWith ("/java"))
+			{
+				return src;
+			}
+		}
+		return null;
 	}
 
 	public void execute () throws MojoExecutionException
@@ -162,8 +178,8 @@ public class CookCCMojo extends AbstractMojo
 			{
 				continue;
 			}
-			Task t = Task.getTask (child);
-			t.execute (log, compiler, createBaseCompilerConfig (cookccPath));
+			Task t = TaskFactory.getTask (child);
+			t.execute (log, compiler, createBaseCompilerConfig (cookccPath), getJavaSrcDir (), cookccPath);
 		}
 
 	}
