@@ -5,7 +5,7 @@
 
 	<groupId>org.yuanheng.cookcc</groupId>
 	<artifactId>cookcc-maven-plugin</artifactId>
-	<version>1.0</version>
+	<version>1.0.1</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>cookcc-maven-plugin</name>

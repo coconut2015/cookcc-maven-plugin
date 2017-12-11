@@ -106,9 +106,10 @@ public class CookCCMojo extends AbstractMojo
 
 	public String getJavaSrcDir ()
 	{
+		String suffix = File.separatorChar + "java";
 		for (String src : compileSourceRoots)
 		{
-			if (src.endsWith ("/java"))
+			if (src.endsWith (suffix))
 			{
 				return src;
 			}
