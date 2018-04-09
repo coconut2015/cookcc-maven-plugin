@@ -23,6 +23,8 @@ import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.compiler.Compiler;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
 import org.codehaus.plexus.compiler.CompilerException;
+import org.codehaus.plexus.compiler.CompilerMessage;
+import org.codehaus.plexus.compiler.CompilerResult;
 
 /**
  * @author	Heng Yuan
@@ -65,8 +67,36 @@ class JavacTask implements Task
 			for (String arg : args)
 				msg += " " + arg;
 			log.debug (msg);
+			log.debug ("Using compiler: " + compiler.getClass ());	
 
-			compiler.performCompile (config);
+			CompilerResult result = compiler.performCompile (config);
+			log.debug ("Success: " + result.isSuccess ());
+
+			boolean hasError = false;
+			StringBuilder errorMessages = new StringBuilder ();
+			errorMessages.append ("CookCC reported an error.  Please use mvn -X clean cookcc:run to display the full javac command to execute cookcc and reproduce the error message.\n");
+
+			log.debug ("CompilerMessages: " + result.getCompilerMessages ().size ());
+			for (CompilerMessage message : result.getCompilerMessages ())
+			{
+				CompilerMessage.Kind kind = message.getKind ();
+				switch (kind)
+				{
+					case WARNING:
+						log.warn (message.toString ());
+						break;
+					case ERROR:
+						log.error (message.toString ());
+						errorMessages.append (message.getMessage ()).append ('\n');
+						hasError = true;
+						break;
+					default:
+						log.info (kind + ": " + message.toString ());
+						break;
+				}
+			}
+			if (hasError || !result.isSuccess ())
+				throw new MojoExecutionException (errorMessages.toString ());
 		}
 		catch (CompilerException ex)
 		{
